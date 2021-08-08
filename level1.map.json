@@ -1,0 +1,17 @@
+{
+    "url": "level1.tmx",
+    "offset": {
+        "x": 0,
+        "y": 0
+    },
+    "z_offset": 0,
+    "y_up": false,
+    "loop_x": false,
+    "loop_y": false,
+    "z_scale": 1,
+    "license": "©2021 Cort Stratton. Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/",
+    "sprite_url": "all-10x10.sprite.json",
+    "sprite_url_table": {
+        "<default>": "all-10x10.sprite.json"
+    }
+}

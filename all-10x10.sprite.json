@@ -1,0 +1,199 @@
+{
+    "url": "all-10x10.png",
+    "sprite_size": {
+        "x": 10,
+        "y": 10
+    },
+    "names": {
+        "map0000": {
+            "start": {
+                "x": 0,
+                "y": 0
+            },
+            "wallMask": 0,
+            "end": {
+                "x": 0,
+                "y": 0
+            }
+        },
+        "map0001": {
+            "start": {
+                "x": 1,
+                "y": 0
+            },
+            "wallMask": 1,
+            "end": {
+                "x": 1,
+                "y": 0
+            }
+        },
+        "map0010": {
+            "start": {
+                "x": 2,
+                "y": 0
+            },
+            "wallMask": 2,
+            "end": {
+                "x": 2,
+                "y": 0
+            }
+        },
+        "map0011": {
+            "start": {
+                "x": 3,
+                "y": 0
+            },
+            "wallMask": 3,
+            "end": {
+                "x": 3,
+                "y": 0
+            }
+        },
+        "map0100": {
+            "start": {
+                "x": 4,
+                "y": 0
+            },
+            "wallMask": 4,
+            "end": {
+                "x": 4,
+                "y": 0
+            }
+        },
+        "map0101": {
+            "start": {
+                "x": 5,
+                "y": 0
+            },
+            "wallMask": 5,
+            "end": {
+                "x": 5,
+                "y": 0
+            }
+        },
+        "map0110": {
+            "start": {
+                "x": 6,
+                "y": 0
+            },
+            "wallMask": 6,
+            "end": {
+                "x": 6,
+                "y": 0
+            }
+        },
+        "map0111": {
+            "start": {
+                "x": 7,
+                "y": 0
+            },
+            "wallMask": 7,
+            "end": {
+                "x": 7,
+                "y": 0
+            }
+        },
+        "map1000": {
+            "start": {
+                "x": 0,
+                "y": 1
+            },
+            "wallMask": 8,
+            "end": {
+                "x": 0,
+                "y": 1
+            }
+        },
+        "map1001": {
+            "start": {
+                "x": 1,
+                "y": 1
+            },
+            "wallMask": 9,
+            "end": {
+                "x": 1,
+                "y": 1
+            }
+        },
+        "map1010": {
+            "start": {
+                "x": 2,
+                "y": 1
+            },
+            "wallMask": 10,
+            "end": {
+                "x": 2,
+                "y": 1
+            }
+        },
+        "map1011": {
+            "start": {
+                "x": 3,
+                "y": 1
+            },
+            "wallMask": 11,
+            "end": {
+                "x": 3,
+                "y": 1
+            }
+        },
+        "map1100": {
+            "start": {
+                "x": 4,
+                "y": 1
+            },
+            "wallMask": 12,
+            "end": {
+                "x": 4,
+                "y": 1
+            }
+        },
+        "map1101": {
+            "start": {
+                "x": 5,
+                "y": 1
+            },
+            "wallMask": 13,
+            "end": {
+                "x": 5,
+                "y": 1
+            }
+        },
+        "map1110": {
+            "start": {
+                "x": 6,
+                "y": 1
+            },
+            "wallMask": 14,
+            "end": {
+                "x": 6,
+                "y": 1
+            }
+        },
+        "map1111": {
+            "start": {
+                "x": 7,
+                "y": 1
+            },
+            "wallMask": 15,
+            "solid": true,
+            "end": {
+                "x": 7,
+                "y": 1
+            }
+        },
+        "purse_spawn": {
+            "x": 0,
+            "y": 2
+        },
+        "hero_spawn": {
+            "x": 1,
+            "y": 2
+        },
+        "enemy_spawn": {
+            "x": 2,
+            "y": 2
+        },
+    },
+    "license": "TODO"
+}

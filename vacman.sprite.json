@@ -1,0 +1,14 @@
+{
+    "url": "vacman.png",
+    "sprite_size": {
+        "x": 8,
+        "y": 8
+    },
+    "names": {
+        "N": {"start": {"x": 0, "y": 0}, "end": {"x":3, "y":0}, "extrapolate":"oscillate", "frames":[4,4,4,4] },
+        "E": {"start": {"x": 0, "y": 1}, "end": {"x":3, "y":1}, "extrapolate":"oscillate", "frames":[4,4,4,4] },
+        "S": {"start": {"x": 0, "y": 2}, "end": {"x":3, "y":2}, "extrapolate":"oscillate", "frames":[4,4,4,4] },
+        "W": {"start": {"x": 0, "y": 3}, "end": {"x":3, "y":3}, "extrapolate":"oscillate", "frames":[4,4,4,4] }
+    },
+    "license": "TODO"
+}

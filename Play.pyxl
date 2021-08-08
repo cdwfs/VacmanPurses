@@ -1,0 +1,294 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+const BLOCK_SIZE = xy(10,10)
+
+const Z_MAP = 0
+const Z_COIN = 5
+const Z_PLAYER = 10
+
+const LAYER_WALLS = 0
+const LAYER_SPECIAL = 1
+
+const DIR_N = 0
+const DIR_E = 1
+const DIR_S = 2
+const DIR_W = 3
+const OFFSET_FOR_DIR = [xy(0,-1), xy(1,0), xy(0,1), xy(-1,0)]
+const ANGLE_FOR_DIR = [π/2, 0, -π/2, π]
+const NAME_FOR_DIR = ["N","E","S","W"]
+const MASK_FOR_DIR = [1, 2, 4, 8]
+
+// Version of lerp() where t can be a vector
+def vec_lerp(a, b, t):
+    return (b - a) * t + a
+def vec_str(v2):
+    return "["+v2.x+","+v2.y+"]"
+def is_zero(v2):
+    return v2.x == 0 and v2.y == 0
+
+// Construct an empty array iterable by array[x][y]
+def make_array2d(size, val default nil):
+    let arr = []
+    resize(arr, size.x)
+    for x < size.x:
+        let column = []
+        resize(column, size.y)
+        for y < size.h:
+            column[y] = val
+        arr[x] = column
+    return arr
+
+def is_dpad_pressed(gamepad):
+    // checking just gamepad.x or gamepad.y isn't sufficient; when the opposite direction
+    // is pressed, there is one frame where e.g. gamepad.xx is non-zero but gamepad.x is zero
+    return (gamepad.xx or gamepad.yy) or (gamepad.x or gamepad.y)
+
+def map_offset(m):
+    return xy(4, 0) * BLOCK_SIZE
+
+def map_pos_to_cell(pos):
+    return round(pos / BLOCK_SIZE)
+
+def map_cell_to_pos(cell):
+    return BLOCK_SIZE * cell
+
+def at_cell_center(entity):
+    // Is this as close as we'll get to the center?
+    const distance = |entity.pos - xy(round(entity.pos.x, BLOCK_SIZE.x),round(entity.pos.y, BLOCK_SIZE.y))|
+    return max(distance.x, distance.y) < entity.speed
+
+// gets the value of the map cell from a world-space coordinate.
+// Only the sign of vel is used, to check the correct direction; its magnitude is ignored.
+def map_sprite(pos, vel default xy(0, 0)):
+    return get_map_sprite(map, map_pos_to_cell(pos) + sign(vel), 0)
+
+
+def make_hero(icell, player_index):
+    return make_entity({
+        pos: map_cell_to_pos(icell),
+        z: Z_PLAYER,
+        name: "Hero",
+        shape: "rect",
+        size: BLOCK_SIZE-xy(2,2),
+        spritesheet: vacman_sprite,
+        sprite:vacman_sprite.N[0],
+        gamepad: gamepad_array[player_index],
+        speed: 0.5,
+        vel: xy(0,0),
+        next_vel: xy(0,0),
+        dir: DIR_N,
+    })
+def itor_hero_draw(hero):
+    draw_entity(hero)
+
+def make_enemy(icell, player_index):
+    return make_entity({
+        pos: map_cell_to_pos(icell),
+        z: Z_PLAYER,
+        name: "Enemy",
+        shape: "rect",
+        size: BLOCK_SIZE-xy(2,2),
+        spritesheet: enemy_sprite,
+        sprite:enemy_sprite.N[0],
+        gamepad: gamepad_array[player_index],
+        speed: 0.5,
+        vel: xy(0,0),
+        next_vel: xy(0,0),
+        dir: DIR_N,
+    })
+def itor_enemy_draw(enemy):
+    draw_entity(enemy)
+
+// Determine mover velocity and facing direction for this frame.
+// target: heroes, enemies
+// RO: map, mover.pos, mover.gamepad, mover.speed
+// RW: mover.next_vel, mover.vel, mover.dir
+def itor_mover_update_velocity(mover):
+    // desired behavior:
+    // - If we're already moving
+    //   - ...and the same direction is already held, keep moving.
+    //   - ...and the opposite direction is now held, then change direction instantly.
+    //   - ...and an orthogonal direction is now held, then register next_vel and change
+    //     direction at the center of the next cell.
+    //   - ...and the dpad is released, stop at the center of the next empty cell
+    // - If we're not moving, start moving in the desired direction immediately (or just
+    //   turn if the path is blocked.
+    // - never possible to move in both X and Y simultaneously
+    with next_vel, vel, gamepad, speed, dir, sprite in mover:
+        // Record desired upcoming turns based on gamepad state
+        let sv = sign(vel)
+        let sg = sign(xy(gamepad.x, gamepad.y))
+        if |sg.x| > ε:
+            next_vel = xy(sg.x * speed, 0)
+        else if |sg.y| > ε:
+            next_vel = xy(0, sg.y * speed)
+        
+        const at_center = at_cell_center(mover)
+        const vel_dir = direction(vel)
+        const next_vel_dir = direction(next_vel)
+        const next_vel_is_opposite = ‖vel_dir + next_vel_dir‖ < ε
+        const next_vel_is_different = ‖vel_dir - next_vel_dir‖ > ε
+        if (at_center or next_vel_is_opposite) and next_vel_is_different:
+            vel = next_vel
+            sv = sign(vel)
+        // Determine facing direction
+        if      sv.x == -1 and sv.y ==  0: dir = DIR_W
+        else if sv.x ==  1 and sv.y ==  0: dir = DIR_E
+        else if sv.x ==  0 and sv.y == -1: dir = DIR_N
+        else if sv.x ==  0 and sv.y ==  1: dir = DIR_S
+        // otherwise, keep current direction
+        mover.sprite = mover.spritesheet[NAME_FOR_DIR[dir]].frame(mode_frames)
+        
+        // Stop moving at cell centers if no dpad input
+        if at_center and not is_zero(sv) and not is_dpad_pressed(gamepad):
+            vel = xy(0,0)
+            sv = xy(0,0)
+            next_vel = xy(0,0)
+
+// Apply current velocity to mover position, taking into account obstacles that block movement.
+// target: heroes, enemies
+// RO: map
+// RW: mover.pos, mover.vel, mover.dir
+def itor_mover_move(mover):
+    const at_center = at_cell_center(mover)
+    with vel, pos, dir in mover:
+        let sv = sign(vel)
+        let icell = map_pos_to_cell(pos)
+        icell = loop(icell, map.size)
+        const fcell = xy((pos.x/BLOCK_SIZE.x) mod 1.0, (pos.y/BLOCK_SIZE.y) mod 1.0)
+        // See if the move is possible, but only stop on centers
+        debug_watch(pos)
+        debug_watch(icell)
+        const ms = get_map_sprite(map, icell, 0)
+        const wall_mask = ms.wallMask
+        const dir_mask = MASK_FOR_DIR[dir]
+        if at_center and (wall_mask ∩ dir_mask):
+            // Hit wall. Stop moving
+            vel = xy(0,0)
+            sv = xy(0,0)
+        else:
+            // Clear to move
+            pos = pos + vel
+            // Snap to a pixel on the axis that we're not moving along
+            // to prevent error from accumulating
+            pos = vec_lerp(round(pos), pos, |sign(vel)|)
+            // Special case wrapping to handle warping around the map
+            pos = loop(pos, -0.5*BLOCK_SIZE, map.size_pixels-0.5(BLOCK_SIZE))
+        assert(sv.x == 0 || sv.y == 0, "velocity " + vec_str(vel) + " must be all X or all Y")
+
+// Collect any pickups in the mover's current cell
+// RO: mover.pos
+// RW: coin_grid, coins
+def itor_mover_get_pickups(mover):
+    const icell = map_pos_to_cell(mover.pos)
+    const coin = coin_grid[icell.x][icell.y]
+    if coin ≠ ∅:
+        coin_grid[icell.x][icell.y] = ∅
+        fast_remove_value(coins, coin)
+    const purse = purse_grid[icell.x][icell.y]
+    if purse ≠ ∅:
+        purse_grid[icell.x][icell.y] = ∅
+        fast_remove_value(purses, purse)
+
+def make_coin(pos):
+    return make_entity({
+        pos: pos,
+        z: Z_COIN,
+        spritesheet: coin_sprite,
+        sprite: coin_sprite.spin[0],
+        shape: "rect",
+        anim_offset: random_integer(0,60),
+    })
+def itor_coin_draw(coin):
+    coin.sprite = coin.spritesheet.spin.frame(mode_frames + coin.anim_offset)
+    draw_entity(coin)
+    
+def make_purse(pos):
+    return make_entity({
+        pos: pos,
+        z: Z_COIN,
+        sprite: all10_sprite.purse,
+        shape: "rect",
+    })
+def itor_purse_draw(purse):
+    draw_entity(purse)
+
+
+let heroes = []
+let enemies = []
+let coins = []
+let coin_grid = []
+let purses = []
+let purse_grid = []
+let hero_spawn_cell = xy(0,0)
+let enemy_spawn_cells = []
+let map = ∅
+let map_xform = xy(0,0)
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+heroes = []
+enemies = []
+coins = []
+coin_grid = []
+purses = []
+purse_grid = []
+hero_spawn_cell = xy(0,0)
+enemy_spawn_cells = []
+map = ∅
+map_xform = xy(0,0)
+
+map = deep_clone(level1_map)
+map_xform = map_offset(map)
+coin_grid = make_array2d(map.size, ∅)
+purse_grid = make_array2d(map.size, ∅)
+for mx < map.size.x:
+    for my < map.size.y:
+        const icell = xy(mx,my)
+        const cell_pos = map_cell_to_pos(icell)
+        // Check Special layer first & place coins in empty cells if nothing else comes up
+        const special = map.layer[LAYER_SPECIAL][mx][my]
+        const wall_sprite = map.layer[LAYER_WALLS][mx][my]
+        if special == map.spritesheet.purse_spawn:
+            let purse = make_purse(cell_pos)
+            push(purses, purse)
+            purse_grid[icell.x][icell.y] = purse
+        else if special == map.spritesheet.hero_spawn:
+            hero_spawn_cell = icell
+        else if special == map.spritesheet.enemy_spawn:
+            push(enemy_spawn_cells, icell)
+        else if not wall_sprite.solid:
+            let coin = make_coin(cell_pos)
+            push(coins, coin)
+            coin_grid[icell.x][icell.y] = coin
+
+push(heroes, make_hero(hero_spawn_cell, 0))
+push(enemies, make_enemy(enemy_spawn_cells[0], 1))
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+set_screen_size(xy(384,224), not DEBUG_DISABLE_PRIVATE_VIEWS)
+
+iterate(heroes, itor_mover_update_velocity)
+iterate(heroes, itor_mover_move)
+iterate(enemies, itor_mover_update_velocity)
+iterate(enemies, itor_mover_move)
+iterate(heroes, itor_mover_get_pickups)
+
+for view at view_index in VIEW_ARRAY:
+    set_clip(view)
+    set_transform(view.corner)
+    preserving_transform:
+        set_transform(map_xform)
+        set_background(#004)
+        draw_map({map:map, pos:xy(0,0), z:Z_MAP, min_layer:0, max_layer:0})
+        // Offset by ½ a grid square so that we can use integer coordinates for the centers of grid tiles
+        compose_transform(0.5 BLOCK_SIZE)
+        iterate(heroes, itor_hero_draw)
+        iterate(enemies, itor_enemy_draw)
+        iterate(coins, itor_coin_draw)
+        iterate(purses, itor_purse_draw)

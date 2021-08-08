@@ -1,0 +1,41 @@
+{
+    "title": "Vac-Man Purses",
+    "developer": "Your Name Here",
+    "copyright": "©2021 Your Name Here",
+    "license": "CC0/Public Domain (Replace with your own license)",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "font": "quad://fonts/deja-8.font.json",
+        "level1_map": "level1.map.json",
+        "vacman_sprite": "vacman.sprite.json",
+        "all10_sprite": "all-10x10.sprite.json",
+        "coin_sprite": "coin.sprite.json",
+        "enemy_sprite": "enemy.sprite.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "Description of your game in about 100 characters.",
+    "constants": {
+        "DEBUG_DISABLE_PRIVATE_VIEWS": {
+            "type": "boolean",
+            "value": false,
+            "description": "If true, all connected players see all four screens"
+        }
+    },
+    "screenshot_tag": "VacManPurses",
+    "screen_size": {
+        "x": 384,
+        "y": 224
+    }
+}
